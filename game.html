@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teka-Teki Isian</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .question-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #2980b9;
+    }
+    .score, .feedback {
+      text-align: center;
+      font-size: 1.2em;
+      margin-top: 20px;
+    }
+    select {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    #loading {
+      display: none;
+      text-align: center;
+      font-size: 1.1em;
+      margin-top: 10px;
+      color: #555;
+    }
+    #popup {
+      display: none;
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      z-index: 9999;
+      text-align: center;
+    }
+    #popup button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #3498db;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Teka-Teki Isian</h1>
+  <div style="text-align:center">
+    <label>Pilih Level:
+      <select id="level">
+        <option value="mudah">Mudah</option>
+        <option value="normal">Normal</option>
+        <option value="sulit">Sulit</option>
+      </select>
+    </label>
+    <button class="btn" onclick="mulaiPermainan()">Mulai</button>
+  </div>  <div id="game" class="question-container" style="display:none">
+    <h2 id="soal"></h2>
+    <input type="text" id="jawabanInput" placeholder="Ketik jawabanmu di sini...">
+    <button class="btn" onclick="periksaJawaban()">Jawab</button>
+    <div id="loading">Memproses jawaban...</div>
+    <div class="feedback" id="feedback"></div>
+  </div>  <div class="score" id="skor"></div>  <div id="popup">
+    <p id="popupMessage"></p>
+    <button onclick="tutupPopup()">Tutup</button>
+  </div>  <script>
+    const soalSet = {
+      mudah: [
+        { tanya: "Aku bersinar siang hari.", kunci: "matahari" },
+        { tanya: "Aku bulat, biasa ditendang.", kunci: "bola" },
+        { tanya: "Aku tempat tinggal hewan.", kunci: "sarang" }
+      ],
+      normal: [
+        { tanya: "Aku punya daun tapi bukan pohon.", kunci: "buku" },
+        { tanya: "Aku punya jarum tapi tidak menjahit.", kunci: "jam" }
+      ],
+      sulit: [
+        { tanya: "Aku bisa pecah tapi bukan benda.", kunci: "janji" },
+        { tanya: "Aku berjalan tanpa kaki.", kunci: "waktu" }
+      ]
+    };
+
+    let soalSekarang = [];
+    let index = 0;
+    let poin = 0;
+
+    function mulaiPermainan() {
+      const level = document.getElementById("level").value;
+      soalSekarang = soalSet[level];
+      index = 0;
+      poin = 0;
+      document.getElementById("game").style.display = "block";
+      document.getElementById("skor").innerText = "";
+      document.getElementById("feedback").innerText = "";
+      tampilkanSoal();
+    }
+
+    function tampilkanSoal() {
+      const s = soalSekarang[index];
+      document.getElementById("soal").innerText = s.tanya;
+      document.getElementById("jawabanInput").value = "";
+      document.getElementById("feedback").innerText = "";
+    }
+
+    function hampirSama(j1, j2) {
+      const norm = (str) => str.toLowerCase().replace(/\s/g, '');
+      return norm(j1) === norm(j2) || norm(j1).includes(norm(j2)) || norm(j2).includes(norm(j1));
+    }
+
+    function periksaJawaban() {
+      const input = document.getElementById("jawabanInput").value.trim().toLowerCase();
+      const kunci = soalSekarang[index].kunci.toLowerCase();
+      if (!input) return alert("Jawaban tidak boleh kosong!");
+
+      document.getElementById("loading").style.display = "block";
+      setTimeout(() => {
+        document.getElementById("loading").style.display = "none";
+        if (input === kunci) {
+          poin++;
+          document.getElementById("feedback").innerText = "✅ Jawabanmu benar!";
+          lanjutSoal();
+        } else if (hampirSama(input, kunci)) {
+          tampilkanPopup("Jawaban hampir benar, ulangi lagi!");
+        } else {
+          tampilkanPopup("Jawaban salah, coba lagi!");
+        }
+      }, 1200);
+    }
+
+    function lanjutSoal() {
+      setTimeout(() => {
+        index++;
+        if (index < soalSekarang.length) {
+          tampilkanSoal();
+        } else {
+          document.getElementById("game").style.display = "none";
+          document.getElementById("skor").innerText = `Skormu: ${poin} dari ${soalSekarang.length}`;
+        }
+      }, 1500);
+    }
+
+    function tampilkanPopup(pesan) {
+      document.getElementById("popupMessage").innerText = pesan;
+      document.getElementById("popup").style.display = "block";
+    }
+
+    function tutupPopup() {
+      document.getElementById("popup").style.display = "none";
+    }
+  </script></body>
+</html>
